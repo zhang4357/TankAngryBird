@@ -1,0 +1,48 @@
+button.button {
+    margin: 10px 15px;
+    padding: 15px 26px;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    background-color: #2dc63f;
+}
+
+button#test1 {
+    position: absolute;
+    left: 25%;
+    top: 87%;
+}
+
+button#test2 {
+    position: absolute;
+    left: 45.5%;
+    top: 87%;
+}
+
+button#test3 {
+    position: absolute;
+    left: 66%;
+    top: 87%;
+}
+
+canvas#canvas {
+    width: 1350px;
+    height: 725px;
+    border: 4px solid #474747;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    top: 70px; bottom: 0; right: 0; left: 0;
+}
+
+p#title {
+    text-align: center;
+    position: relative;
+}
+
+p#powerText {
+    position: relative;
+    text-align: center;
+    top: 800px;
+}

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tank Game</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type = "text/javascript" src = matter.js></script>
+    <script type = "text/javascript" src = physics.js></script>
+</head>
+<body>
+<p id = "title">Tank Game</p>
+<br>
+<canvas id = "canvas"></canvas>
+<button id = "test1" class = "button" onclick="runSim()">Start</button>
+<button id = "test2" class = "button" onclick="objects.push(createRect(0, canvas.height-100, 50, 50)); objects.push(createCircle(750, 300, 100))">Create Block and Target</button>
+<button id = "test3" class = "button" onclick="objects.push(createRect(0, canvas.height-50, canvas.width, 50))">Create Floor</button>
+<br>
+<p id = "powerText">Power: </p>
+</body>
+</html>
