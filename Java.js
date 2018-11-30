@@ -86,3 +86,10 @@ function changeAngularV() {
     Body.setAngularVelocity( box, Math.PI/6);
 }
 
+function createCircle(x, y, radius, target) {
+    var circle = Matter.Bodies.circle(x, y, radius);
+    if(floating) {
+        circle.ignoreGravity = true;
+    }
+    objects.push(createObject(circle.verticies));
+}
