@@ -94,8 +94,11 @@ function createRect(x, y, w, h) {
     return createObject(vertices);
 }
 
-function createCircle(x, y, radius) {
+function createCircle(x, y, radius, floating) {
     var circle = Matter.Bodies.circle(x, y, radius);
+    if(floating) {
+        circle.ignoreGravity = true;
+    }
     objects.push(createObject(circle.vertices));
 }
 
