@@ -11,16 +11,18 @@ var engine = Engine.create();
 function Initialize() {
     var ctx=document.getElementById("Canvas").getContext("2d");
     canvasH=ctx.height;
-    canvasH=ctc.width;
+    canvasH=ctx.width;
     var topWall = Bodies.rectangle(400, 50, 720, 20, { isStatic: true });
     var leftWall = Bodies.rectangle(50, 210, 20, 300, { isStatic: true });
     var rightWall = Bodies.rectangle(750, 210, 20, 300, { isStatic: true });
     var bottomWall = Bodies.rectangle(400, 350, 720, 20, { isStatic: true });
 
     box = Bodies.rectangle(90, 120, 40, 40, { friction: 0 , frictionAir: 0});
+    target = createCircle(600, 200, 50);
+    
 
 
-    World.add(engine.world, [topWall, leftWall, rightWall, bottomWall, box]);
+    World.add(engine.world, [topWall, leftWall, rightWall, bottomWall, box, target]);
     bodies = Matter.Composite.allBodies(engine.world);
 
 
@@ -28,7 +30,6 @@ function Initialize() {
         objects.push(createObject(bodies[i].vertices));
 
     }
-
 }
 function startAnimation() {
     Animation();
@@ -86,3 +87,7 @@ function changeAngularV() {
     Body.setAngularVelocity( box, Math.PI/6);
 }
 
+function createCircle(x, y, radius) {
+    var circle = Bodies.circle(x, y, radius);
+    return circle;
+}
