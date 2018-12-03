@@ -3,19 +3,12 @@
 <head>
     <title>Tank Game</title>
     <script type="text/javascript" src="matter.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.11.0/matter.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="Style.css" type="text/css" />
 </head>
 <body onload="Initialize()">
-<canvas  id="Canvas" width="800" height="600"></canvas>
-<button onclick="startAnimation()">Start</button>
-<button onclick="changeLinearV(10, Math.PI/4)">Linear Velocity</button>
-<button onclick="changeAngularV()">Angular Velocity</button>
-
 <br>
-
+<button onclick="changeAngle(Math.PI/6)">Raise</button>
+<button onclick="changeAngle(-Math.PI/6)">Lower</button>
+<button onclick="shootBullet()">Fire</button>
 <script type="text/javascript" src="Java.js"></script>
 </body>
 </html>

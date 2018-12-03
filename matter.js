@@ -79,6 +79,7 @@ var Axes = _dereq_('../geometry/Axes');
             position: { x: 0, y: 0 },
             force: { x: 0, y: 0 },
             torque: 0,
+            gravity: 1,
             positionImpulse: { x: 0, y: 0 },
             constraintImpulse: { x: 0, y: 0, angle: 0 },
             totalContacts: 0,
@@ -487,6 +488,16 @@ var Axes = _dereq_('../geometry/Axes');
     };
 
     /**
+     * Sets the gravity of the body
+     * @method setGravity
+     * @param {body} body
+     * @param {number} gravity
+     */
+    Body.setGravity = function (body, gravity) {
+        body.gravity = gravity
+    };
+
+    /**
      * Sets the linear velocity of the body instantly. Position, angle, force etc. are unchanged. See also `Body.applyForce`.
      * @method setVelocity
      * @param {body} body
@@ -628,8 +639,8 @@ var Axes = _dereq_('../geometry/Axes');
             velocityPrevY = body.position.y - body.positionPrev.y;
 
         // update velocity with Verlet integration
-        body.velocity.x = (velocityPrevX * frictionAir * correction) + (body.force.x / body.mass) * deltaTimeSquared;
-        body.velocity.y = (velocityPrevY * frictionAir * correction) + (body.force.y / body.mass) * deltaTimeSquared;
+        body.velocity.x = (velocityPrevX * frictionAir * correction) + (body.force.x / body.mass) * deltaTimeSquared * body.gravity;
+        body.velocity.y = (velocityPrevY * frictionAir * correction) + (body.force.y / body.mass) * deltaTimeSquared * body.gravity;
 
         body.positionPrev.x = body.position.x;
         body.positionPrev.y = body.position.y;
