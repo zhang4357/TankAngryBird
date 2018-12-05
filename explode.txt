@@ -1,8 +1,0 @@
-function explodeBody(body, amount) {
-	var bodyvector = "";
-	for(i = 0; i < amount; i++) {
-		bodyvector = bodyvector.concat(body.verticies[i].x + " " + body.verticies[i].y + " ");
-	}
-	var vector = Verticies.fromPath(bodyvector)
-	//Add in separate parts of target here, give it a velocity away from the old mass's center and give it spin maybe
-}

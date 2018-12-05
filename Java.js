@@ -24,8 +24,7 @@ var render = Render.create({
 function Initialize() {
     //creates all the bodies and runs the engine at start
     //creates ground, tank with cannon
-    var ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
-    var ceiling = Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
+
     World.add(engine.world, ground);
     World.add(engine.world, ceiling);
     createTank();
@@ -38,6 +37,8 @@ function Initialize() {
     Render.run(render);
 }
 
+var ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
+var ceiling = Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
 var angleConstraint;
 var constraint5;
 var pivot;
@@ -153,24 +154,18 @@ function changeAngle(deltaAngle) {
 }
 
 function shootBullet(){
-    var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),10, {
-        restitution: 0.65
-    });
+    var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),10);
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: 15*Math.cos(angle), y:-15*Math.sin(angle)});
-    checkTargetCollision(bullet);
-
+    for(t = 0; t < targetList.length; t++) {
+        checkTargetBulletCollision(bullet, targetList[t]);
+    }
 }
 
 function createTargets(x, y, radius, amount) {
     for(i = 0; i < amount; i++) {
         var target = Bodies.circle(x+(100*i), y, radius, {
-            gravity: i/10,
-            restitution: 0.8
-        });
-        Body.setVelocity(target, {
-            x: 0,
-            y: 10
+            gravity: 0
         });
         targetList.push(target);
         World.add(engine.world, targetList[i]);
@@ -178,21 +173,41 @@ function createTargets(x, y, radius, amount) {
 }
 
 /**
- * Constantly checks to see if a bullet hit a target
- * If the bullet hits the target, the target will disappear, and it will stop checking for collisions.
- * It'll be replaced with an explosion.
- * If the bullet hits the floor, it will stop checking for collisions.
- * @param (bullet) bullet
+ * Constantly checks to see if an object hit the other.
+ * It'll wait for the first object to hit the ground before it stops checking.
+ * @param object1
+ * @param object2
  */
-function checkTargetCollision(bullet) {
-    setInterval(function () {
-        for (t = 0; t < targetList.length; t++) {
-            if (Matter.SAT.collides(bullet, targetList[t], null).collided) {
-                // World.remove(engine.world, bullet);
-                explodeBody(targetList[t]);
-                clearInterval();
-            }
+function checkTargetBulletCollision(object1, object2) {
+    var target = setInterval(function() {
+        if(Matter.SAT.collides(object1, object2, null).collided) {
+            alert("hit object2");
+            explodeTarget(object2);
+            World.remove(object2);
+        }
+        if(Matter.SAT.collides(object1, ground, null).collided) {
+            fadeBody(object1);
+            clearInterval(target);
         }
     }, 10);
 }
 
+function explodeTarget(target) {
+    var num = Math.floor(Math.random() * 5) + 5;
+    // alert("Num: " + num);
+    for(i = 0; i < num; i++) {
+        var targetShard = Bodies.circle(target.position.x, target.position.y, 2.5);
+        World.add(engine.world, [targetShard]);
+        Body.setVelocity(targetShard, {x: (Math.floor(Math.random() * 3) - 2) * 25});
+    }
+}
+
+/**
+ * Lowers the opacity of the body when it touches the ground.
+ *
+ * @param body: body to be faded away
+ */
+
+function fadeBody(body) {
+
+}
