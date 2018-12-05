@@ -188,9 +188,11 @@ function checkTargetCollision(bullet) {
     setInterval(function () {
         for (t = 0; t < targetList.length; t++) {
             if (Matter.SAT.collides(bullet, targetList[t], null).collided) {
-                World.remove(engine.world, bullet);
+                // World.remove(engine.world, bullet);
+                explodeBody(targetList[t]);
                 clearInterval();
             }
         }
     }, 10);
 }
+
