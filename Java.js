@@ -159,16 +159,20 @@ function shootBullet(){
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: 15*Math.cos(angle), y:-15*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
-        checkCollision(bullet, targetList[t], t, true);
+        if (targetHealth[t] > 0) {
+            checkCollision(bullet, targetList[t], t, true);
+        }
     }
 }
 
 function createTargets(x, y, radius, amount) {
     for(i = 0; i < amount; i++) {
         var target = Bodies.circle(x+(100*i), y, radius, {
-            gravity: 0
+            // gravity: 0
+            isStatic: true
         });
         targetList.push(target);
+        targetHealth.push(100);
         World.add(engine.world, targetList[i]);
     }
 }
@@ -178,26 +182,30 @@ function createTargets(x, y, radius, amount) {
  * It'll wait for the first object to hit the ground before it stops checking.
  * @param object1
  * @param object2
- * @param index
+ * @param index of object2 if it's in an array. if not needed, put a really big number.
  * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
  */
 function checkCollision(object1, object2, index, bullet) {
+    console.log("index; " + index);
     var check = false;
     var target = setInterval(function() {
         if(Matter.SAT.collides(object1, object2, null).collided && !check && bullet) {
             check = true;
-            explodeTarget(object2);
-            World.remove(engine.world, object2);
-            targetList.splice(index, 1);
+            if(checkTargetHealth(index, 50)) {
+                explodeTarget(object2, index);
+                World.remove(engine.world, object2);
+                targetList.splice(index, 1);
+                targetHealth.splice(index, 1);
+            }
         }
         if(Matter.SAT.collides(object1, ground, null).collided) {
-            fadeBody(object1);
+            removeBody(object1);
             clearInterval(target);
         }
     }, 10);
 }
 
-function explodeTarget(target) {
+function explodeTarget(target, index) {
     var num = Math.floor(Math.random() * 5) + 5;
     var direction = 0;
     for(i = 0; i < num; i++) {
@@ -205,18 +213,29 @@ function explodeTarget(target) {
         World.add(engine.world, targetShard);
         Body.setVelocity(targetShard, {x: Math.cos(direction), y: Math.sin(direction)});
         direction += (360/num) + (Math.PI/180);
-        checkCollision(targetShard, ceiling, 100, false);
+        checkCollision(targetShard, ceiling, index, false);
     }
 }
 
 /**
- * Lowers the opacity of the body when it touches the ground.
- *
- * @param body: body to be faded away
+ * Sets a timer for the body to be removed from the screen.
+ * @param body: body to be removed
  */
-
-function fadeBody(body) {
+function removeBody(body) {
     setTimeout(function () {
         World.remove(engine.world, body);
     }, 1750);
+}
+
+
+/**
+ Lowers the health of the target that got hit.
+ If the target's health is <= 0 (dead), it'll return true. If not, false.
+ @param index - index of targetHealth array
+ @param damage - damage to be done to the target. varies depending on bullet type
+ */
+function checkTargetHealth(index, damage) {
+    targetHealth[index] -= damage;
+    console.log("health: " + targetHealth);
+    return targetHealth[index] <= 0;
 }
