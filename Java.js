@@ -158,7 +158,7 @@ function shootBullet(){
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: 15*Math.cos(angle), y:-15*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
-        checkTargetBulletCollision(bullet, targetList[t]);
+        checkCollision(bullet, targetList[t], t, true);
     }
 }
 
@@ -177,13 +177,17 @@ function createTargets(x, y, radius, amount) {
  * It'll wait for the first object to hit the ground before it stops checking.
  * @param object1
  * @param object2
+ * @param index
+ * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
  */
-function checkTargetBulletCollision(object1, object2) {
+function checkCollision(object1, object2, index, bullet) {
+    var check = false;
     var target = setInterval(function() {
-        if(Matter.SAT.collides(object1, object2, null).collided) {
-            alert("hit object2");
+        if(Matter.SAT.collides(object1, object2, null).collided && !check && bullet) {
+            check = true;
             explodeTarget(object2);
-            World.remove(object2);
+            World.remove(engine.world, object2);
+            targetList.splice(index, 1);
         }
         if(Matter.SAT.collides(object1, ground, null).collided) {
             fadeBody(object1);
@@ -194,11 +198,13 @@ function checkTargetBulletCollision(object1, object2) {
 
 function explodeTarget(target) {
     var num = Math.floor(Math.random() * 5) + 5;
-    // alert("Num: " + num);
+    var direction = 0;
     for(i = 0; i < num; i++) {
-        var targetShard = Bodies.circle(target.position.x, target.position.y, 2.5);
-        World.add(engine.world, [targetShard]);
-        Body.setVelocity(targetShard, {x: (Math.floor(Math.random() * 3) - 2) * 25});
+        var targetShard = Bodies.circle(target.position.x, target.position.y, 4);
+        World.add(engine.world, targetShard);
+        Body.setVelocity(targetShard, {x: Math.cos(direction), y: Math.sin(direction)});
+        direction += (360/num) + (Math.PI/180);
+        checkCollision(targetShard, ceiling, 100, false);
     }
 }
 
@@ -209,5 +215,13 @@ function explodeTarget(target) {
  */
 
 function fadeBody(body) {
-
+    console.log("fadeee");
+    var fade = setInterval(function () {
+        console.log("render: " + body.render.opacity);
+        body.render.opacity -= .03;
+        if(body.render.opacity <= .04) {
+            World.remove(engine.world, body);
+            clearInterval(fade);
+        }
+    }, 50);
 }
