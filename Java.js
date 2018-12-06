@@ -45,6 +45,7 @@ var pivot;
 var cannon;
 // var target;
 var targetList = [];
+var targetHealth = [];
 function createTank() {
     //creates the tank and adds it to the world
     var wheel1=Bodies.circle(70,550,20,{ collisionFilter: { group: -1 } });
@@ -215,13 +216,7 @@ function explodeTarget(target) {
  */
 
 function fadeBody(body) {
-    console.log("fadeee");
-    var fade = setInterval(function () {
-        console.log("render: " + body.render.opacity);
-        body.render.opacity -= .03;
-        if(body.render.opacity <= .04) {
-            World.remove(engine.world, body);
-            clearInterval(fade);
-        }
-    }, 50);
+    setTimeout(function () {
+        World.remove(engine.world, body);
+    }, 1750);
 }
