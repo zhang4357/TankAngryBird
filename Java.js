@@ -17,18 +17,22 @@ var render = Render.create({
     engine: engine,
     options: {
         width: 1200,
-        height: 600
+        height: 600,
+        showAngleIndicator: true
     }
 });
 
+var ground;
+var ceiling;
 function Initialize() {
     //creates all the bodies and runs the engine at start
     //creates ground, tank with cannon
-
-    World.add(engine.world, ground);
-    World.add(engine.world, ceiling);
+    ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
+    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
+    World.add(engine.world, [ground, ceiling]);
     createTank();
     createTargets(400, 400, 25, 3);
+
 
 // run the engine
     Engine.run(engine);
@@ -37,25 +41,26 @@ function Initialize() {
     Render.run(render);
 }
 
-var ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
-var ceiling = Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
 var angleConstraint;
 var constraint5;
 var pivot;
 var cannon;
-// var target;
-var targetList = [];
-var targetHealth = [];
+var wheel1;
+var wheel2;
+var platform;
 function createTank() {
     //creates the tank and adds it to the world
-    var wheel1=Bodies.circle(70,550,20,{ collisionFilter: { group: -1 } });
-    var wheel2=Bodies.circle(130, 550, 20,{collisionFilter: { group: -1 } });
-    var tank=Bodies.rectangle(100,550,100,20,{collisionFilter: { group: -1 } });
-    var platform=Bodies.rectangle(100,500,60,20,{collisionFilter: { group: -1 } });
+
+    wheel1=Bodies.circle(70,550,20,{ collisionFilter: { group: -1 } });
+    wheel2=Bodies.circle(130, 550, 20,{collisionFilter: { group: -1 } });
+    tank=Bodies.rectangle(100,550,100,20,{collisionFilter: { group: -1 } });
+    platform=Bodies.rectangle(100,500,60,20,{collisionFilter: { group: -1 } });
     cannon=Bodies.rectangle(100, 450, 70, 10, {collisionFilter: { group: -1 } });
     Matter.Body.setMass(cannon, 0.0001);
     pivot=Bodies.circle(100,500,20,{collisionFilter: { group: -1 } });
-
+    //keypress
+    document.onkeydown = Key.keyPressed;
+    //document.onkeyup = Key.keyUp;
     //constrains/attaches two bodies together
     var constraint1 = Constraint.create({
         //constrains left wheel and tank body
@@ -131,7 +136,7 @@ function changeAngle(deltaAngle) {
     //adjusts the angle of the cannon
     angle=angle+deltaAngle;
     World.remove(engine.world, [angleConstraint, cannon,  constraint5]);
-    cannon=Bodies.rectangle(100, 450, 70, 10, {collisionFilter: { group: -1 } });
+    cannon=Bodies.rectangle(pivot.position.x, pivot.position.y, 70, 10, {collisionFilter: { group: -1 } });
     Matter.Body.setMass(cannon, 0.0001);
     angleConstraint = Constraint.create({
         //cannon  and pivot(will be used to adjust the angle)
@@ -155,9 +160,11 @@ function changeAngle(deltaAngle) {
 }
 
 function shootBullet(){
-    var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),10);
+    //fires a plain bullet
+    var vel=15;
+    var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, bullet);
-    Body.setVelocity( bullet, {x: 15*Math.cos(angle), y:-15*Math.sin(angle)});
+    Body.setVelocity( bullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
             checkCollision(bullet, targetList[t], t, true);
@@ -165,10 +172,109 @@ function shootBullet(){
     }
 }
 
+var barrageBullet;
+function startBarrage(){
+    //fires a barrage shot
+    var vel=20;
+    barrageBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
+    World.add(engine.world, barrageBullet);
+    Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+}
+
+
+function shootBarrage(){
+    //initiates the barrage/separation
+    var bullet1=Bodies.circle(barrageBullet.position.x, barrageBullet.position.y, 5);
+    var bullet2=Bodies.circle(barrageBullet.position.x, barrageBullet.position.y,5);
+    World.add(engine.world, [bullet1,bullet2]);
+    Body.setVelocity(bullet1, {x: barrageBullet.velocity.x, y:barrageBullet.velocity.y-5});
+    Body.setVelocity(bullet2, {x: barrageBullet.velocity.x, y:barrageBullet.velocity.y+5});
+}
+
+var explosiveBullet;
+function startExplosive() {
+    //fires and explosive shot
+    var vel=10;
+    explosiveBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
+    World.add(engine.world, explosiveBullet);
+    Body.setVelocity( explosiveBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+
+}
+
+//shoots the explosive
+function shootExplosive() {
+    //initiates the explosion
+    var num=20;
+    var direction=0;
+    World.remove(engine.world, explosiveBullet);
+    for(i=0;i<num;i++){
+        var bulletTemp=Bodies.circle(explosiveBullet.position.x, explosiveBullet.position.y,3);
+        World.add(engine.world, [bulletTemp]);
+        Body.setVelocity(bulletTemp, {x: explosiveBullet.velocity.x+5*Math.cos(direction), y:explosiveBullet.velocity.y+5*Math.sin(direction)});
+        direction+=(360/num)+Math.PI/180;
+    }
+}
+
+function move(o) { //for each function for movements
+    var speed=5;
+    switch (o) {
+        case 'a' : //move backwards
+            Body.setVelocity(wheel1, {x: -speed, y:0});
+            Body.setVelocity(wheel2, {x: -speed, y:0});
+            break;
+        case 'd' : //move forwards
+            Body.setVelocity(wheel1, {x: speed, y:0});
+            Body.setVelocity(wheel2, {x: speed, y:0});
+            break;
+        case 'w' : //raise angle
+            changeAngle(Math.PI/20);
+            break;
+        case 's' : //lower angle
+            changeAngle(-Math.PI/20);
+            break;
+        case 'enter' : //active barrage
+            shootBullet();
+            break;
+        case 'space' : //shoot with spacebar
+            shootBullet();
+            break;
+    }
+}
+
+var Key = { //event code for pressing keys
+    keyPressed : function (event) {
+        switch(event.keyCode) {
+            case 65:
+                move('a');
+                break;
+            case 68:
+                move('d');
+                break;
+            case 87:
+                move('w');
+                break;
+            case 83:
+                move('s');
+                break;
+            case 13:
+                move('enter');
+                break;
+            case 32:
+                move('space');
+                break;
+            case 49 || 50 || 51:
+                changeBullet(event.keyCode - 49);
+                break;
+        }},
+
+};
+
+var targetList = [];
+var targetHealth = [];
 function createTargets(x, y, radius, amount) {
     for(i = 0; i < amount; i++) {
         var target = Bodies.circle(x+(100*i), y, radius, {
-            // gravity: 0
+            //gravity: 0
             isStatic: true
         });
         targetList.push(target);
@@ -206,7 +312,8 @@ function checkCollision(object1, object2, index, bullet) {
 }
 
 function explodeTarget(target, index) {
-    var num = Math.floor(Math.random() * 5) + 5;
+    var num = Math.floor(Math.random() * 5) + 10;
+    //var num=30;
     var direction = 0;
     for(i = 0; i < num; i++) {
         var targetShard = Bodies.circle(target.position.x, target.position.y, 4);
@@ -238,4 +345,14 @@ function checkTargetHealth(index, damage) {
     targetHealth[index] -= damage;
     console.log("health: " + targetHealth);
     return targetHealth[index] <= 0;
+}
+
+/**
+ Changes the bullet type depending on the button they press.
+ 1 - Normal
+ 2 - Explosive
+ 3 - Barrage
+ */
+function changeBullet(type) {
+
 }
