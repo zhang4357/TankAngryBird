@@ -22,12 +22,16 @@ var render = Render.create({
     }
 });
 
+var ground;
+var ceiling;
 function Initialize() {
     //creates all the bodies and runs the engine at start
     //creates ground, tank with cannon
-    var ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
-    World.add(engine.world, ground);
+    ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
+    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
+    World.add(engine.world, [ground, ceiling]);
     createTank();
+    createTargets(400, 400, 25, 3);
 
 
 // run the engine
@@ -161,6 +165,11 @@ function shootBullet(){
     var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+    for(t = 0; t < targetList.length; t++) {
+        if (targetHealth[t] > 0) {
+            checkCollision(bullet, targetList[t], t, true);
+        }
+    }
 }
 
 var barrageBullet;
@@ -170,6 +179,7 @@ function startBarrage(){
     barrageBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, barrageBullet);
     Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+
 }
 
 
@@ -225,13 +235,13 @@ function move(o) { //for each function for movements
             changeAngle(-Math.PI/20);
             break;
         case 'enter' : //shoot with shift
-            shootBarrage();
+            shootBullet();
             break;
         case 'space' : //shoot with spacebar
-            startBarrage();
+            shootBullet();
             break;
     }
-};
+}
 
 var Key = { //event code for pressing keys
     keyPressed : function (event) {
@@ -258,5 +268,82 @@ var Key = { //event code for pressing keys
 
 };
 
+var targetList = [];
+var targetHealth = [];
+function createTargets(x, y, radius, amount) {
+    for(i = 0; i < amount; i++) {
+        var target = Bodies.circle(x+(100*i), y, radius, {
+            //gravity: 0
+             isStatic: true
+        });
+        targetList.push(target);
+        targetHealth.push(100);
+        World.add(engine.world, targetList[i]);
+    }
+}
+
+/**
+ * Constantly checks to see if an object hit the other.
+ * It'll wait for the first object to hit the ground before it stops checking.
+ * @param object1
+ * @param object2
+ * @param index of object2 if it's in an array. if not needed, put a really big number.
+ * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
+ */
+function checkCollision(object1, object2, index, bullet) {
+    console.log("index; " + index);
+    var check = false;
+    var target = setInterval(function() {
+        if(Matter.SAT.collides(object1, object2, null).collided && !check && bullet) {
+            check = true;
+            if(checkTargetHealth(index, 50)) {
+                explodeTarget(object2, index);
+                World.remove(engine.world, object2);
+                targetList.splice(index, 1);
+                targetHealth.splice(index, 1);
+            }
+        }
+        if(Matter.SAT.collides(object1, ground, null).collided) {
+            removeBody(object1);
+            clearInterval(target);
+        }
+    }, 10);
+}
+
+function explodeTarget(target, index) {
+    var num = Math.floor(Math.random() * 5) + 10;
+    //var num=30;
+    var direction = 0;
+    for(i = 0; i < num; i++) {
+        var targetShard = Bodies.circle(target.position.x, target.position.y, 4);
+        World.add(engine.world, targetShard);
+        Body.setVelocity(targetShard, {x: Math.cos(direction), y: Math.sin(direction)});
+        direction += (360/num) + (Math.PI/180);
+        checkCollision(targetShard, ceiling, index, false);
+    }
+}
+
+/**
+ * Sets a timer for the body to be removed from the screen.
+ * @param body: body to be removed
+ */
+function removeBody(body) {
+    setTimeout(function () {
+        World.remove(engine.world, body);
+    }, 1750);
+}
+
+
+/**
+ Lowers the health of the target that got hit.
+ If the target's health is <= 0 (dead), it'll return true. If not, false.
+ @param index - index of targetHealth array
+ @param damage - damage to be done to the target. varies depending on bullet type
+ */
+function checkTargetHealth(index, damage) {
+    targetHealth[index] -= damage;
+    console.log("health: " + targetHealth);
+    return targetHealth[index] <= 0;
+}
 
 
