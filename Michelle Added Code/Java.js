@@ -5,7 +5,11 @@ var Engine = Matter.Engine,
     Composites = Matter.Composites,
     Constraint = Matter.Constraint,
     Bodies = Matter.Bodies,
-    Body = Matter.Body;
+    Events = Matter.Events,
+    Common = Matter.Common,
+    Body = Matter.Body,
+    MouseConstraint = Matter.MouseConstraint,
+    Mouse = Matter.Mouse;
 
 
 // create an engine
@@ -18,21 +22,44 @@ var render = Render.create({
     options: {
         width: 1200,
         height: 600,
-        showAngleIndicator: true
+        showAngleIndicator: true,
+        wireframes: false,
+        background: '#ffffff',
     }
 });
+// add mouse control
+var mouse = Mouse.create(render.canvas),
+    mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+            stiffness: 0.2,
+            render: {
+                visible: false
+            }
+        }
+    });
+
+World.add(engine.world, mouseConstraint);
+
+// keep the mouse in sync with rendering
+render.mouse = mouse;
 
 var ground;
 var ceiling;
+var play;
 function Initialize() {
-    //creates all the bodies and runs the engine at start
-    //creates ground, tank with cannon
-    ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
-    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
-    World.add(engine.world, [ground, ceiling]);
-    createTank();
-    createTargets(400, 400, 25, 3);
+    //creates start menu and runs the engine at start
 
+    play=Bodies.circle(600,300,250, {
+        isStatic: true,
+        render: {
+            strokeStyle: '#ffffff',
+            sprite: {
+                texture: './img/playbtn.png',
+            }
+        }
+    });
+    World.add(engine.world, play);
 
 // run the engine
     Engine.run(engine);
@@ -40,6 +67,13 @@ function Initialize() {
 // run the renderer
     Render.run(render);
 }
+
+Events.on(mouseConstraint, 'mousedown', function() {
+    if (mouseConstraint.body===play) {
+        World.remove(engine.world, [play,mouse,mouseConstraint]);
+        level();
+    }
+});
 
 var angleConstraint;
 var constraint5;
@@ -179,6 +213,11 @@ function startBarrage(){
     barrageBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, barrageBullet);
     Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+    for(t = 0; t < targetList.length; t++) {
+        if (targetHealth[t] > 0) {
+            checkCollision(barrageBullet, targetList[t], t, true);
+        }
+    }
 
 }
 
@@ -190,6 +229,16 @@ function shootBarrage(){
     World.add(engine.world, [bullet1,bullet2]);
     Body.setVelocity(bullet1, {x: barrageBullet.velocity.x, y:barrageBullet.velocity.y-5});
     Body.setVelocity(bullet2, {x: barrageBullet.velocity.x, y:barrageBullet.velocity.y+5});
+    for(t = 0; t < targetList.length; t++) {
+        if (targetHealth[t] > 0) {
+            checkCollision(bullet1, targetList[t], t, true);
+            for(t = 0; t < targetList.length; t++) {
+                if (targetHealth[t] > 0) {
+                    checkCollision(bullet2, targetList[t], t, true);
+                }
+            }
+        }
+    }
 }
 
 var explosiveBullet;
@@ -199,6 +248,11 @@ function startExplosive() {
     explosiveBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, explosiveBullet);
     Body.setVelocity( explosiveBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
+    for(t = 0; t < targetList.length; t++) {
+        if (targetHealth[t] > 0) {
+            checkCollision(explosiveBullet, targetList[t], t, true);
+        }
+    }
 
 }
 
@@ -213,6 +267,11 @@ function shootExplosive() {
         World.add(engine.world, [bulletTemp]);
         Body.setVelocity(bulletTemp, {x: explosiveBullet.velocity.x+5*Math.cos(direction), y:explosiveBullet.velocity.y+5*Math.sin(direction)});
         direction+=(360/num)+Math.PI/180;
+        for(t = 0; t < targetList.length; t++) {
+            if (targetHealth[t] > 0) {
+                checkCollision(bulletTemp, targetList[t], t, true);
+            }
+        }
     }
 
 }
@@ -235,10 +294,10 @@ function move(o) { //for each function for movements
             changeAngle(-Math.PI/20);
             break;
         case 'enter' : //shoot with shift
-            shootBullet();
+            shootBarrage();
             break;
         case 'space' : //shoot with spacebar
-            shootBullet();
+            startBarrage();
             break;
     }
 }
@@ -278,8 +337,9 @@ function createTargets(x, y, radius, amount) {
         });
         targetList.push(target);
         targetHealth.push(100);
-        World.add(engine.world, targetList[i]);
+        World.add(engine.world, target);
     }
+    //console.log(targetList.length);
 }
 
 /**
@@ -299,8 +359,8 @@ function checkCollision(object1, object2, index, bullet) {
             if(checkTargetHealth(index, 50)) {
                 explodeTarget(object2, index);
                 World.remove(engine.world, object2);
-                targetList.splice(index, 1);
-                targetHealth.splice(index, 1);
+                //targetList.splice(index, 1);
+                //targetHealth.splice(index, 1);
             }
         }
         if(Matter.SAT.collides(object1, ground, null).collided) {
@@ -342,8 +402,37 @@ function removeBody(body) {
  */
 function checkTargetHealth(index, damage) {
     targetHealth[index] -= damage;
-    console.log("health: " + targetHealth);
-    return targetHealth[index] <= 0;
+    console.log("health: " + targetHealth +"index:" + index);
+    return targetHealth[index] ==0;
 }
 
 
+function level(){
+    ground = Bodies.rectangle(200, 610, 400, 60, { isStatic: true });
+    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
+
+    createTank();
+
+    for (k=1;k<=5;k++){
+        createTargets(400, 100*k, 25, 1);
+    }
+    createTargets(990, 300, 40, 1);
+
+    var bottomPlatform=Bodies.rectangle(600, 200, 200, 20);
+    Matter.Body.setMass(bottomPlatform, 0.2);
+    var bottomConstraint = Constraint.create({
+        pointA: { x: 700, y: 550 },
+        bodyB: bottomPlatform,
+        length: 0
+    });
+    var midPlatform=Bodies.rectangle(600, 200, 20, 450);
+    Matter.Body.setMass(midPlatform, 0.3);
+    var constraintMid = Constraint.create({
+        pointA: { x: 700, y: 300 },
+        bodyB: midPlatform,
+        length: 0
+    });
+    //var ball = Bodies.circle(650, 150, 20);
+    World.add(engine.world, [ground, ceiling, midPlatform,constraintMid, bottomConstraint, bottomPlatform]);
+
+}
