@@ -2,7 +2,7 @@
 var Engine = Matter.Engine,
     Render = Matter.Render,
     World = Matter.World,
-    Composites = Matter.Composites,
+    Composite = Matter.Composite,
     Constraint = Matter.Constraint,
     Bodies = Matter.Bodies,
     Events = Matter.Events,
@@ -68,10 +68,30 @@ function Initialize() {
     Render.run(render);
 }
 
+
 Events.on(mouseConstraint, 'mousedown', function() {
     if (mouseConstraint.body===play) {
+        //checks if the play button is clicked
         World.remove(engine.world, [play,mouse,mouseConstraint]);
-        level();
+        levelSelection();
+    }
+    else if(mouseConstraint.body===level1){
+        //checks if the level one button is clicked
+        World.remove(engine.world, [level1,mouse,mouseConstraint]);
+        setLevel1();
+    }
+});
+
+// an example of using beforeUpdate event on an engine
+Events.on(engine, 'afterUpdate', function() {
+    //resets the level if the tank falls off the edge
+    //console.log(pivot.position.y);
+    if(pivot.position.y>600){
+        //World.remove(engine.world, [Composite.allBodies(engine.world)]);
+        World.clear(engine.world);
+        //console.log("hi");
+        bullettype=1;
+        setLevel1();
     }
 });
 
@@ -201,7 +221,7 @@ function shootBullet(){
     Body.setVelocity( bullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(bullet, targetList[t], t, true);
+            checkCollision(bullet, targetList[t], t, true, 10);
         }
     }
 }
@@ -215,7 +235,7 @@ function startBarrage(){
     Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(barrageBullet, targetList[t], t, true);
+            checkCollision(barrageBullet, targetList[t], t, true, 20);
         }
     }
 
@@ -231,26 +251,26 @@ function shootBarrage(){
     Body.setVelocity(bullet2, {x: barrageBullet.velocity.x, y:barrageBullet.velocity.y+5});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(bullet1, targetList[t], t, true);
-            for(t = 0; t < targetList.length; t++) {
-                if (targetHealth[t] > 0) {
-                    checkCollision(bullet2, targetList[t], t, true);
-                }
-            }
+            checkCollision(bullet1, targetList[t], t, true, 30);
+        }
+    }
+    for(t = 0; t < targetList.length; t++) {
+        if (targetHealth[t] > 0) {
+            checkCollision(bullet2, targetList[t], t, true, 30);
         }
     }
 }
 
 var explosiveBullet;
 function startExplosive() {
-    //fires and explosive shot
+    //fires an explosive shot
     var vel=10;
     explosiveBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, explosiveBullet);
     Body.setVelocity( explosiveBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(explosiveBullet, targetList[t], t, true);
+            checkCollision(explosiveBullet, targetList[t], t, true, 20);
         }
     }
 
@@ -269,7 +289,7 @@ function shootExplosive() {
         direction+=(360/num)+Math.PI/180;
         for(t = 0; t < targetList.length; t++) {
             if (targetHealth[t] > 0) {
-                checkCollision(bulletTemp, targetList[t], t, true);
+                checkCollision(bulletTemp, targetList[t], t, true, 50);
             }
         }
     }
@@ -293,14 +313,28 @@ function move(o) { //for each function for movements
         case 's' : //lower angle
             changeAngle(-Math.PI/20);
             break;
-        case 'enter' : //shoot with shift
-            shootBarrage();
+        case 'enter' : //activate shot
+            if(bullettype === 2) {
+                shootBarrage();
+            }
+            else if(bullettype === 3) {
+                shootExplosive();
+            }
             break;
         case 'space' : //shoot with spacebar
-            startBarrage();
+            if(bullettype === 1) {
+                shootBullet();
+            }
+            else if(bullettype === 2) {
+                startBarrage();
+            }
+            else {
+                startExplosive();
+            }
             break;
     }
 }
+
 
 var Key = { //event code for pressing keys
     keyPressed : function (event) {
@@ -323,6 +357,10 @@ var Key = { //event code for pressing keys
             case 32:
                 move('space');
                 break;
+        }
+        if(event.keyCode === 49 || event.keyCode === 50 || event.keyCode === 51) {
+            console.log("changing");
+            changeBullet(event.keyCode - 48);
         }},
 
 };
@@ -350,13 +388,13 @@ function createTargets(x, y, radius, amount) {
  * @param index of object2 if it's in an array. if not needed, put a really big number.
  * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
  */
-function checkCollision(object1, object2, index, bullet) {
+function checkCollision(object1, object2, index, bullet, damage) {
     console.log("index; " + index);
     var check = false;
     var target = setInterval(function() {
         if(Matter.SAT.collides(object1, object2, null).collided && !check && bullet) {
             check = true;
-            if(checkTargetHealth(index, 50)) {
+            if(checkTargetHealth(index, damage)) {
                 explodeTarget(object2, index);
                 World.remove(engine.world, object2);
                 //targetList.splice(index, 1);
@@ -403,11 +441,12 @@ function removeBody(body) {
 function checkTargetHealth(index, damage) {
     targetHealth[index] -= damage;
     console.log("health: " + targetHealth +"index:" + index);
-    return targetHealth[index] ==0;
+    return targetHealth[index] <=0 && targetHealth[index]>-50;
 }
 
 
-function level(){
+function setLevel1(){
+    //sets up the first level
     ground = Bodies.rectangle(200, 610, 400, 60, { isStatic: true });
     ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
 
@@ -435,4 +474,29 @@ function level(){
     //var ball = Bodies.circle(650, 150, 20);
     World.add(engine.world, [ground, ceiling, midPlatform,constraintMid, bottomConstraint, bottomPlatform]);
 
+}
+
+var level1;
+function levelSelection(){
+    level1=Bodies.circle(600,300,100, {
+        isStatic: true,
+        render: {
+            strokeStyle: '#ffffff',
+            sprite: {
+                texture: './img/buttonOne.png',
+            }
+        }
+    });
+    World.add(engine.world, level1);
+}
+
+/**
+ Changes the bullet type depending on the button they press.
+ 1 - Normal
+ 2 - Explosive
+ 3 - Barrage
+ */
+var bullettype=1;
+function changeBullet(type) {
+    bullettype = type;
 }
