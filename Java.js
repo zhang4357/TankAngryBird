@@ -2,10 +2,14 @@
 var Engine = Matter.Engine,
     Render = Matter.Render,
     World = Matter.World,
-    Composites = Matter.Composites,
+    Composite = Matter.Composite,
     Constraint = Matter.Constraint,
     Bodies = Matter.Bodies,
-    Body = Matter.Body;
+    Events = Matter.Events,
+    Common = Matter.Common,
+    Body = Matter.Body,
+    MouseConstraint = Matter.MouseConstraint,
+    Mouse = Matter.Mouse;
 
 
 // create an engine
@@ -18,21 +22,44 @@ var render = Render.create({
     options: {
         width: 1200,
         height: 600,
-        showAngleIndicator: true
+        showAngleIndicator: true,
+        wireframes: false,
+        background: '#ffffff',
     }
 });
+// add mouse control
+var mouse = Mouse.create(render.canvas),
+    mouseConstraint = MouseConstraint.create(engine, {
+        mouse: mouse,
+        constraint: {
+            stiffness: 0.2,
+            render: {
+                visible: false
+            }
+        }
+    });
+
+World.add(engine.world, mouseConstraint);
+
+// keep the mouse in sync with rendering
+render.mouse = mouse;
 
 var ground;
 var ceiling;
+var play;
 function Initialize() {
-    //creates all the bodies and runs the engine at start
-    //creates ground, tank with cannon
-    ground = Bodies.rectangle(600, 610, 1200, 60, { isStatic: true });
-    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
-    World.add(engine.world, [ground, ceiling]);
-    createTank();
-    createTargets(400, 400, 25, 3);
+    //creates start menu and runs the engine at start
 
+    play=Bodies.circle(600,300,250, {
+        isStatic: true,
+        render: {
+            strokeStyle: '#ffffff',
+            sprite: {
+                texture: './img/playbtn.png',
+            }
+        }
+    });
+    World.add(engine.world, play);
 
 // run the engine
     Engine.run(engine);
@@ -41,6 +68,33 @@ function Initialize() {
     Render.run(render);
 }
 
+
+Events.on(mouseConstraint, 'mousedown', function() {
+    if (mouseConstraint.body===play) {
+        //checks if the play button is clicked
+        World.remove(engine.world, [play,mouse,mouseConstraint]);
+        levelSelection();
+    }
+    else if(mouseConstraint.body===level1){
+        //checks if the level one button is clicked
+        World.remove(engine.world, [level1,mouse,mouseConstraint]);
+        setLevel1();
+    }
+});
+
+// an example of using beforeUpdate event on an engine
+Events.on(engine, 'afterUpdate', function() {
+    //resets the level if the tank falls off the edge
+    //console.log(pivot.position.y);
+    if(pivot.position.y>600){
+        //World.remove(engine.world, [Composite.allBodies(engine.world)]);
+        World.clear(engine.world);
+        //console.log("hi");
+        bullettype=1;
+        setLevel1();
+    }
+});
+
 var angleConstraint;
 var constraint5;
 var pivot;
@@ -48,7 +102,6 @@ var cannon;
 var wheel1;
 var wheel2;
 var platform;
-var bullettype = 1;
 function createTank() {
     //creates the tank and adds it to the world
 
@@ -162,13 +215,13 @@ function changeAngle(deltaAngle) {
 
 function shootBullet(){
     //fires a plain bullet
-    var vel=15;
+    var vel=20;
     var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(bullet, targetList[t], t, true, 50);
+            checkCollision(bullet, targetList[t], t, true, 10);
         }
     }
 }
@@ -176,15 +229,16 @@ function shootBullet(){
 var barrageBullet;
 function startBarrage(){
     //fires a barrage shot
-    var vel=20;
+    var vel=15;
     barrageBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, barrageBullet);
     Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(barrageBullet, targetList[t], t, true, 50);
+            checkCollision(barrageBullet, targetList[t], t, true, 20);
         }
     }
+
 }
 
 
@@ -209,16 +263,17 @@ function shootBarrage(){
 
 var explosiveBullet;
 function startExplosive() {
-    //fires and explosive shot
+    //fires an explosive shot
     var vel=10;
     explosiveBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, explosiveBullet);
     Body.setVelocity( explosiveBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
     for(t = 0; t < targetList.length; t++) {
         if (targetHealth[t] > 0) {
-            checkCollision(explosiveBullet, targetList[t], t, true, 50);
+            checkCollision(explosiveBullet, targetList[t], t, true, 20);
         }
     }
+
 }
 
 //shoots the explosive
@@ -234,7 +289,7 @@ function shootExplosive() {
         direction+=(360/num)+Math.PI/180;
         for(t = 0; t < targetList.length; t++) {
             if (targetHealth[t] > 0) {
-                checkCollision(bulletTemp, targetList[t], t, true, 8);
+                checkCollision(bulletTemp, targetList[t], t, true, 30);
             }
         }
     }
@@ -279,6 +334,7 @@ function move(o) { //for each function for movements
     }
 }
 
+
 var Key = { //event code for pressing keys
     keyPressed : function (event) {
         switch(event.keyCode) {
@@ -301,25 +357,23 @@ var Key = { //event code for pressing keys
                 move('space');
                 break;
         }
-
         if(event.keyCode === 49 || event.keyCode === 50 || event.keyCode === 51) {
             console.log("changing");
             changeBullet(event.keyCode - 48);
-        }
-    },
+        }},
+
 };
 
 var targetList = [];
 var targetHealth = [];
 function createTargets(x, y, radius, amount) {
     for(i = 0; i < amount; i++) {
-        var target = Bodies.circle(x+(100*i), y, radius, {
-            //gravity: 0
+        var target = Bodies.circle(x+(30*i), y, radius, {
             isStatic: true
         });
         targetList.push(target);
         targetHealth.push(100);
-        World.add(engine.world, targetList[i]);
+        World.add(engine.world, target);
     }
 }
 
@@ -330,6 +384,7 @@ function createTargets(x, y, radius, amount) {
  * @param object2
  * @param index of object2 if it's in an array. if not needed, put a really big number.
  * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
+ * @param damage the amount of damage it'll do
  */
 function checkCollision(object1, object2, index, bullet, damage) {
     console.log("index; " + index);
@@ -340,15 +395,15 @@ function checkCollision(object1, object2, index, bullet, damage) {
             if(checkTargetHealth(index, damage)) {
                 explodeTarget(object2, index);
                 World.remove(engine.world, object2);
-                targetList.splice(index, 1);
-                targetHealth.splice(index, 1);
+                //targetList.splice(index, 1);
+                //targetHealth.splice(index, 1);
             }
         }
         if(Matter.SAT.collides(object1, ground, null).collided) {
             removeBody(object1);
             clearInterval(target);
         }
-    }, 10);
+    }, 1);
 }
 
 function explodeTarget(target, index) {
@@ -383,8 +438,105 @@ function removeBody(body) {
  */
 function checkTargetHealth(index, damage) {
     targetHealth[index] -= damage;
-    console.log("health: " + targetHealth);
-    return targetHealth[index] <= 0;
+    //determines color based on damage
+    var color;
+    if (targetHealth[index]>=90){
+        color='#001876'
+    }
+    else if(targetHealth[index]>=80){
+        color='#001e92'
+    }
+    else if(targetHealth[index]>=70){
+        color='#0022a7'
+    }
+    else if(targetHealth[index]>=60){
+        color='#0027c1'
+    }
+    else if(targetHealth[index]>=50){
+        color='#002ee1'
+    }
+    else if(targetHealth[index]>=40){
+        color='#1d6cd4'
+    }
+    else if(targetHealth[index]>=30){
+        color='#449eeb'
+    }
+    else if(targetHealth[index]>=20){
+        color='#63bfeb'
+    }
+    else if(targetHealth[index]>=10){
+        color='#7bd6ff'
+    }
+    else if(targetHealth[index]>0){
+        color='#bbe3ff'
+    }
+    if(targetHealth[index]>0) {
+        //changes color of target
+        World.remove(engine.world, targetList[index]);
+        targetList[index] = Bodies.circle(targetList[index].position.x, targetList[index].position.y, targetList[index].circleRadius, {
+            isStatic: true,
+            render: {
+                fillStyle: color
+            }
+        });
+        World.add(engine.world, targetList[index]);
+    }
+    if(targetHealth[index]<=0){
+        World.remove(engine.world, targetList[index]);
+    }
+    console.log("health: " + targetHealth +"index:" + index);
+    return targetHealth[index] <=0;
+}
+
+
+function setLevel1(){
+    //sets up the first level
+    ground = Bodies.rectangle(0, 575, 600, 10, { isStatic: true });
+    ceiling=Bodies.rectangle(700, 0, 1200, 60, { isStatic: true });
+
+    createTank();
+    createTargets(50, 25, 25, 1);
+
+    for (k=0;k<3;k++){
+        createTargets(350, 450 + (25 * (2-k)), 15, 3);
+    }
+
+    for (t = 0; t < 3; t++) {
+        createTargets(650, 250 + (60 * (2 - t)), 25, 1);
+    }
+
+    // createTargets(990, 300, 40, 1);
+
+    // var bottomPlatform=Bodies.rectangle(600, 200, 200, 20);
+    // Matter.Body.setMass(bottomPlatform, 0.2);
+    // var bottomConstraint = Constraint.create({
+    //     pointA: { x: 700, y: 550 },
+    //     bodyB: bottomPlatform,
+    //     length: 0
+    // });
+    // var midPlatform=Bodies.rectangle(600, 200, 20, 450);
+    // Matter.Body.setMass(midPlatform, 0.3);
+    // var constraintMid = Constraint.create({
+    //     pointA: { x: 700, y: 300 },
+    //     bodyB: midPlatform,
+    //     length: 0
+    // });
+    //var ball = Bodies.circle(650, 150, 20);
+    World.add(engine.world, [ground, ceiling]/**midPlatform,constraintMid, bottomConstraint, bottomPlatform]**/);
+}
+
+var level1;
+function levelSelection(){
+    level1=Bodies.circle(600,300,100, {
+        isStatic: true,
+        render: {
+            strokeStyle: '#ffffff',
+            sprite: {
+                texture: './img/buttonOne.png',
+            }
+        }
+    });
+    World.add(engine.world, level1);
 }
 
 /**
@@ -393,6 +545,7 @@ function checkTargetHealth(index, damage) {
  2 - Explosive
  3 - Barrage
  */
+var bullettype=1;
 function changeBullet(type) {
     bullettype = type;
 }
