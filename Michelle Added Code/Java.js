@@ -405,7 +405,7 @@ function checkCollision(object1, object2, index, bullet, damage) {
             removeBody(object1);
             clearInterval(target);
         }
-    }, 10);
+    }, 1);
 }
 
 function explodeTarget(target, index) {
@@ -440,8 +440,54 @@ function removeBody(body) {
  */
 function checkTargetHealth(index, damage) {
     targetHealth[index] -= damage;
+    //determines color based on damage
+    var color;
+    if (targetHealth[index]>=90){
+        color='#001876'
+    }
+    else if(targetHealth[index]>=80){
+        color='#001e92'
+    }
+    else if(targetHealth[index]>=70){
+        color='#0022a7'
+    }
+    else if(targetHealth[index]>=60){
+        color='#0027c1'
+    }
+    else if(targetHealth[index]>=50){
+        color='#002ee1'
+    }
+    else if(targetHealth[index]>=40){
+        color='#1d6cd4'
+    }
+    else if(targetHealth[index]>=30){
+        color='#449eeb'
+    }
+    else if(targetHealth[index]>=20){
+        color='#63bfeb'
+    }
+    else if(targetHealth[index]>=10){
+        color='#7bd6ff'
+    }
+    else if(targetHealth[index]>0){
+        color='#bbe3ff'
+    }
+    if(targetHealth[index]>0) {
+        //changes color of target
+        World.remove(engine.world, targetList[index]);
+        targetList[index] = Bodies.circle(targetList[index].position.x, targetList[index].position.y, targetList[index].circleRadius, {
+            isStatic: true,
+            render: {
+                fillStyle: color
+            }
+        });
+        World.add(engine.world, targetList[index]);
+    }
+    if(targetHealth[index]<=0){
+        World.remove(engine.world, targetList[index]);
+    }
     console.log("health: " + targetHealth +"index:" + index);
-    return targetHealth[index] <=0 && targetHealth[index]>-50;
+    return targetHealth[index] <=0;
 }
 
 
