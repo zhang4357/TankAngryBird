@@ -21,7 +21,7 @@ var render = Render.create({
     engine: engine,
     options: {
         width: 1200,
-        height: 800,
+        height: 700,
         showAngleIndicator: true,
         wireframes: false,
         background: '#ffffff',
@@ -68,7 +68,7 @@ function Initialize() {
     Render.run(render);
 }
 
-
+var levelNum;
 Events.on(mouseConstraint, 'mousedown', function() {
     if (mouseConstraint.body===play) {
         //checks if the play button is clicked
@@ -77,8 +77,15 @@ Events.on(mouseConstraint, 'mousedown', function() {
     }
     else if(mouseConstraint.body===level1){
         //checks if the level one button is clicked
-        World.remove(engine.world, [level1,mouse,mouseConstraint]);
+        levelNum=1;
+        World.remove(engine.world, [level1,level2,mouse,mouseConstraint]);
         setLevel1();
+    }
+    else if(mouseConstraint.body===level2){
+        //checks if the level one button is clicked
+        levelNum=2;
+        World.remove(engine.world, [level1,level2,mouse,mouseConstraint]);
+        setLevel2();
     }
 });
 
@@ -91,7 +98,12 @@ Events.on(engine, 'afterUpdate', function() {
         World.clear(engine.world);
         //console.log("hi");
         bullettype=1;
-        setLevel1();
+        if(levelNum==1) {
+            setLevel1();
+        }
+        else if(levelNum==2) {
+            setLevel2();
+        }
     }
 });
 
@@ -419,6 +431,7 @@ function explodeTarget(target, index) {
         direction += (360/num) + (Math.PI/180);
         checkCollision(targetShard, ceiling, index, false);
     }
+    checkWin();
 }
 
 /**
@@ -522,9 +535,30 @@ function setLevel1(){
     showShotSelection(1);
 }
 
+function setLevel2(){
+    //sets up the first level
+    ground = Bodies.rectangle(0, 575, 600, 10, { isStatic: true });
+    ceiling=Bodies.rectangle(700, 0, 1200, 60, { isStatic: true });
+
+    createTank();
+    createTargets(50, 25, 25, 1);
+
+    for (k=0;k<3;k++){
+        createTargets(350, 450 + (25 * (2-k)), 15, 3);
+    }
+
+    for (t = 0; t < 3; t++) {
+        createTargets(650, 250 + (60 * (2 - t)), 25, 1);
+    }
+
+    World.add(engine.world, [ground, ceiling]/**midPlatform,constraintMid, bottomConstraint, bottomPlatform]**/);
+    showShotSelection(1);
+}
+
 var level1;
+var level2;
 function levelSelection(){
-    level1=Bodies.circle(600,300,100, {
+    level1=Bodies.circle(200,300,100, {
         isStatic: true,
         render: {
             strokeStyle: '#ffffff',
@@ -533,7 +567,18 @@ function levelSelection(){
             }
         }
     });
-    World.add(engine.world, level1);
+    level2=Bodies.circle(600,300,100, {
+        isStatic: true,
+        render: {
+            strokeStyle: '#ffffff',
+            sprite: {
+                texture: './img/buttonTwo.png',
+                xScale: 0.5,
+                yScale: 0.5
+            }
+        }
+    });
+    World.add(engine.world, [level1, level2]);
 }
 
 /**
@@ -594,4 +639,17 @@ function showShotSelection(num){
         }
     });
     World.add(engine.world, [bulletBox, barrageBox, explosionBox]);
+}
+
+function checkWin(){
+    var win=true;
+    for(i=0; i<targetHealth.length; i++){
+        if(targetHealth[i]>0){
+            win=false;
+        }
+    }
+    if(win){
+        World.clear(engine.world);
+        levelSelection();
+    }
 }
