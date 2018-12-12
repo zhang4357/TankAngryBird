@@ -21,7 +21,7 @@ var render = Render.create({
     engine: engine,
     options: {
         width: 1200,
-        height: 600,
+        height: 800,
         showAngleIndicator: true,
         wireframes: false,
         background: '#ffffff',
@@ -215,7 +215,7 @@ function changeAngle(deltaAngle) {
 
 function shootBullet(){
     //fires a plain bullet
-    var vel=15;
+    var vel=20;
     var bullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, bullet);
     Body.setVelocity( bullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
@@ -229,7 +229,7 @@ function shootBullet(){
 var barrageBullet;
 function startBarrage(){
     //fires a barrage shot
-    var vel=20;
+    var vel=15;
     barrageBullet=Bodies.circle(pivot.position.x+70*Math.cos(angle),pivot.position.y-70*Math.sin(angle),5);
     World.add(engine.world, barrageBullet);
     Body.setVelocity( barrageBullet, {x: vel*Math.cos(angle), y:-vel*Math.sin(angle)});
@@ -289,7 +289,7 @@ function shootExplosive() {
         direction+=(360/num)+Math.PI/180;
         for(t = 0; t < targetList.length; t++) {
             if (targetHealth[t] > 0) {
-                checkCollision(bulletTemp, targetList[t], t, true, 50);
+                checkCollision(bulletTemp, targetList[t], t, true, 30);
             }
         }
     }
@@ -493,7 +493,7 @@ function checkTargetHealth(index, damage) {
 
 function setLevel1(){
     //sets up the first level
-    ground = Bodies.rectangle(200, 610, 400, 60, { isStatic: true });
+    ground = Bodies.rectangle(200, 610, 400, 10, { isStatic: true });
     ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
 
     createTank();
@@ -519,7 +519,7 @@ function setLevel1(){
     });
     //var ball = Bodies.circle(650, 150, 20);
     World.add(engine.world, [ground, ceiling, midPlatform,constraintMid, bottomConstraint, bottomPlatform]);
-
+    showShotSelection(1);
 }
 
 var level1;
@@ -545,4 +545,53 @@ function levelSelection(){
 var bullettype=1;
 function changeBullet(type) {
     bullettype = type;
+    World.remove(engine.world, [bulletBox,barrageBox,explosionBox]);
+    showShotSelection(type);
+
+}
+
+var bulletBox;
+var barrageBox;
+var explosionBox;
+function showShotSelection(num){
+    //shows which bullet the player is currently using
+    var bulletSize=30;
+    var barrageSize=30;
+    var explosionSize=30;
+    if(num===1){
+        bulletSize=50;
+        barrageSize=30;
+        explosionSize=30;
+    }
+    else if(num===2){
+        bulletSize=30;
+        barrageSize=50;
+        explosionSize=30;
+    }
+    else if(num===3){
+        bulletSize=30;
+        barrageSize=30;
+        explosionSize=50;
+    }
+    bulletBox=Bodies.rectangle(100,650,bulletSize,bulletSize, {
+        isStatic: true,
+        render: {
+            fillStyle: '#00ff00'
+        }
+    });
+
+    barrageBox=Bodies.rectangle(200,650,barrageSize,barrageSize, {
+        isStatic: true,
+        render: {
+            fillStyle: '#0000ff'
+        }
+    });
+
+    explosionBox=Bodies.rectangle(300,650,explosionSize,explosionSize, {
+        isStatic: true,
+        render: {
+            fillStyle: '#ff0000'
+        }
+    });
+    World.add(engine.world, [bulletBox, barrageBox, explosionBox]);
 }
