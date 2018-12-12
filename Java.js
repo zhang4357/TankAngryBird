@@ -21,7 +21,7 @@ var render = Render.create({
     engine: engine,
     options: {
         width: 1200,
-        height: 600,
+        height: 800,
         showAngleIndicator: true,
         wireframes: false,
         background: '#ffffff',
@@ -293,18 +293,19 @@ function shootExplosive() {
             }
         }
     }
+
 }
 
 function move(o) { //for each function for movements
     var speed=5;
     switch (o) {
         case 'a' : //move backwards
-            Body.setVelocity(wheel1, {x: -speed, y:0});
-            Body.setVelocity(wheel2, {x: -speed, y:0});
+            Body.setVelocity(wheel1, {x: -speed, y: 0});
+            Body.setVelocity(wheel2, {x: -speed, y: 0});
             break;
         case 'd' : //move forwards
-            Body.setVelocity(wheel1, {x: speed, y:0});
-            Body.setVelocity(wheel2, {x: speed, y:0});
+            Body.setVelocity(wheel1, {x: speed, y: 0});
+            Body.setVelocity(wheel2, {x: speed, y: 0});
             break;
         case 'w' : //raise angle
             changeAngle(Math.PI/20);
@@ -368,13 +369,15 @@ var targetList = [];
 var targetHealth = [];
 function createTargets(x, y, radius, amount) {
     for(i = 0; i < amount; i++) {
-        var target = Bodies.circle(x+(30*i), y, radius, {
+        var target = Bodies.circle(x+(100*i), y, radius, {
+            //gravity: 0
             isStatic: true
         });
         targetList.push(target);
         targetHealth.push(100);
         World.add(engine.world, target);
     }
+    //console.log(targetList.length);
 }
 
 /**
@@ -384,7 +387,6 @@ function createTargets(x, y, radius, amount) {
  * @param object2
  * @param index of object2 if it's in an array. if not needed, put a really big number.
  * @param bullet if it's true, it'll check for hitting a target. if it's just waiting for it to hit the ground, it won't.
- * @param damage the amount of damage it'll do
  */
 function checkCollision(object1, object2, index, bullet, damage) {
     console.log("index; " + index);
@@ -491,38 +493,33 @@ function checkTargetHealth(index, damage) {
 
 function setLevel1(){
     //sets up the first level
-    ground = Bodies.rectangle(0, 575, 600, 10, { isStatic: true });
-    ceiling=Bodies.rectangle(700, 0, 1200, 60, { isStatic: true });
+    ground = Bodies.rectangle(200, 610, 400, 10, { isStatic: true });
+    ceiling=Bodies.rectangle(600, 0, 1200, 60, { isStatic: true });
 
     createTank();
-    createTargets(50, 25, 25, 1);
 
-    for (k=0;k<3;k++){
-        createTargets(350, 450 + (25 * (2-k)), 15, 3);
+    for (k=1;k<=5;k++){
+        createTargets(400, 100*k, 25, 1);
     }
+    createTargets(990, 300, 40, 1);
 
-    for (t = 0; t < 3; t++) {
-        createTargets(650, 250 + (60 * (2 - t)), 25, 1);
-    }
-
-    // createTargets(990, 300, 40, 1);
-
-    // var bottomPlatform=Bodies.rectangle(600, 200, 200, 20);
-    // Matter.Body.setMass(bottomPlatform, 0.2);
-    // var bottomConstraint = Constraint.create({
-    //     pointA: { x: 700, y: 550 },
-    //     bodyB: bottomPlatform,
-    //     length: 0
-    // });
-    // var midPlatform=Bodies.rectangle(600, 200, 20, 450);
-    // Matter.Body.setMass(midPlatform, 0.3);
-    // var constraintMid = Constraint.create({
-    //     pointA: { x: 700, y: 300 },
-    //     bodyB: midPlatform,
-    //     length: 0
-    // });
+    var bottomPlatform=Bodies.rectangle(600, 200, 200, 20);
+    Matter.Body.setMass(bottomPlatform, 0.2);
+    var bottomConstraint = Constraint.create({
+        pointA: { x: 700, y: 550 },
+        bodyB: bottomPlatform,
+        length: 0
+    });
+    var midPlatform=Bodies.rectangle(600, 200, 20, 450);
+    Matter.Body.setMass(midPlatform, 0.3);
+    var constraintMid = Constraint.create({
+        pointA: { x: 700, y: 300 },
+        bodyB: midPlatform,
+        length: 0
+    });
     //var ball = Bodies.circle(650, 150, 20);
-    World.add(engine.world, [ground, ceiling]/**midPlatform,constraintMid, bottomConstraint, bottomPlatform]**/);
+    World.add(engine.world, [ground, ceiling, midPlatform,constraintMid, bottomConstraint, bottomPlatform]);
+    showShotSelection(1);
 }
 
 var level1;
@@ -548,4 +545,67 @@ function levelSelection(){
 var bullettype=1;
 function changeBullet(type) {
     bullettype = type;
+    World.remove(engine.world, [bulletBox,barrageBox,explosionBox]);
+    showShotSelection(type);
+
+}
+
+var bulletBox;
+var barrageBox;
+var explosionBox;
+function showShotSelection(num){
+    //shows which bullet the player is currently using
+    var bulletSize;
+    var barrageSize;
+    var explosionSize;
+    if(num===1){
+        bulletSize=0.01;
+        barrageSize=0;
+        explosionSize=0;
+    }
+    else if(num===2){
+        bulletSize=0;
+        barrageSize=0.05;
+        explosionSize=0;
+    }
+    else if(num===3){
+        bulletSize=0;
+        barrageSize=0;
+        explosionSize=0.045;
+    }
+    bulletBox=Bodies.rectangle(100,650,0.0225,0.035, {
+        isStatic: true,
+        strokeStyle: '#ffffff',
+        render: {
+            sprite: {
+                texture: "./img/bullet.png",
+                xScale: 0.0225 + bulletSize,
+                yScale: 0.03 + bulletSize,
+            }
+        }
+    });
+
+    barrageBox=Bodies.rectangle(200,650,0.1,0.1, {
+        isStatic: true,
+        render: {
+            sprite: {
+                texture: "./img/barrage.png",
+                xScale: 0.15 + barrageSize,
+                yScale: 0.15 + barrageSize
+            }
+        }
+    });
+
+    explosionBox=Bodies.rectangle(300,650,0.09,0.09, {
+        isStatic: true,
+        strokeStyle: '#ffffff',
+        render: {
+            sprite: {
+                texture: './img/explosion.png',
+                xScale: 0.09 + explosionSize,
+                yScale: 0.09 + explosionSize,
+            }
+        }
+    });
+    World.add(engine.world, [bulletBox, barrageBox, explosionBox]);
 }

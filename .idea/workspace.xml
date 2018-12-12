@@ -42,20 +42,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Index.html" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Index.html">
           <provider selected="true" editor-type-id="text-editor">
             <state>
-              <caret column="8" lean-forward="true" selection-start-column="8" selection-end-column="8" />
+              <caret column="14" selection-start-column="10" selection-end-column="14" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Java.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Java.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Java.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="417">
-              <caret line="500" column="52" selection-start-line="500" selection-start-column="52" selection-end-line="500" selection-end-column="52" />
+            <state relative-caret-position="390">
+              <caret line="573" column="27" selection-start-line="573" selection-start-column="27" selection-end-line="573" selection-end-column="27" />
             </state>
           </provider>
         </entry>
@@ -82,6 +82,7 @@
       <find>fadeBody</find>
       <find>changeAngle</find>
       <find>damage</find>
+      <find>changeBullet</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -122,6 +123,11 @@
             <path>
               <item name="TankAngryBird" type="b2602c69:ProjectViewProjectNode" />
               <item name="TankAngryBird" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="TankAngryBird" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TankAngryBird" type="462c0819:PsiDirectoryNode" />
+              <item name="img" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -168,16 +174,16 @@
       <workItem from="1544039169421" duration="3017000" />
       <workItem from="1544212200093" duration="2508000" />
       <workItem from="1544471322049" duration="1110000" />
-      <workItem from="1544557945405" duration="2373000" />
+      <workItem from="1544557945405" duration="2508000" />
+      <workItem from="1544644534472" duration="2327000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="20576000" />
+    <option name="totallyTimeSpent" value="23038000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.08541667" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -205,6 +211,27 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="8" lean-forward="true" selection-start-column="8" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Java.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8500">
+          <caret line="500" column="52" selection-start-line="500" selection-start-column="52" selection-end-line="500" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/matter.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="10795">
+          <caret line="635" column="43" selection-start-line="635" selection-start-column="43" selection-end-line="635" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Index.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -387,17 +414,20 @@
     <entry file="file://$USER_HOME$/AppData/Local/Temp/Java.js.url">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/Index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="8" lean-forward="true" selection-start-column="8" selection-end-column="8" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/img/bullet.png">
+      <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Java.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="417">
-          <caret line="500" column="52" selection-start-line="500" selection-start-column="52" selection-end-line="500" selection-end-column="52" />
+        <state relative-caret-position="390">
+          <caret line="573" column="27" selection-start-line="573" selection-start-column="27" selection-end-line="573" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="14" selection-start-column="10" selection-end-column="14" />
         </state>
       </provider>
     </entry>
